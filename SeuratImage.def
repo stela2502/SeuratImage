@@ -1,0 +1,111 @@
+Bootstrap: docker
+From: alpine:latest
+
+%post
+    # Update and install essential packages
+    apk update && apk add --no-cache \
+        bash \
+        build-base \
+        fontconfig ttf-dejavu ttf-droid ttf-liberation \
+        curl \
+        openblas-dev \
+        gfortran \
+        python3 \
+        py3-pip \
+        python3-dev \
+        py3-setuptools \
+        py3-wheel \
+        R \
+        R-dev \
+        R-doc \
+        libxml2-dev \
+        libcurl \
+        curl-dev \
+        linux-headers \
+        zeromq-dev \
+        gcc \
+        g++ \
+        gfortran \
+        libffi-dev \
+        openssl-dev \
+        make \
+        cmake \
+        zeromq-dev \
+        libgit2-dev \
+        cairo-dev \
+        fontconfig freetype-dev harfbuzz fribidi-dev \
+        harfbuzz-dev \
+        libjpeg-turbo-dev tiff-dev \
+        git
+    # all of them just to get deftools installed later:
+    apk add --no-cache \
+        zeromq-dev \
+        libgit2-dev \
+        cairo-dev \
+        fontconfig freetype-dev harfbuzz fribidi-dev \
+        harfbuzz-dev \
+        libjpeg-turbo-dev tiff-dev 
+
+    # and this is necessary for Seurat
+    apk add --no-cache \
+        libgomp gfortran lapack-dev blas-dev boost-dev \
+        openblas libxml2-dev sqlite-dev zlib-dev hdf5-dev gsl-dev
+
+    # Allow pip to modify system-wide packages
+    export PIP_BREAK_SYSTEM_PACKAGES=1
+    
+    # Install JupyterLab and related Python packages
+    pip install --no-cache-dir --upgrade pip
+    pip install --no-cache-dir \
+        jupyterlab \
+        nbconvert \
+        papermill \
+        numpy \
+        scipy \
+        pandas \
+        matplotlib \
+        seaborn \
+        notebook
+
+    # Install R packages
+    Rscript -e "install.packages('IRkernel', repos='http://cran.r-project.org')"
+    Rscript -e "IRkernel::installspec(user = FALSE)"  # Register the kernel in Jupyter
+
+    # Install additional R packages for data science
+    Rscript -e "install.packages(c('devtools', 'remotes', 'segmented', 'BiocManager' ), repos='http://cran.r-project.org')"
+    Rscript -e "install.packages(c('Seurat'), repos='http://cran.r-project.org')"
+    # Rscript -e "remotes::install_github('satijalab/seurat', 'seurat5')"
+    Rscript -e "remotes::install_github('satijalab/seurat-data', 'seurat5')"
+    Rscript -e "remotes::install_github('satijalab/azimuth', 'seurat5')"
+    Rscript -e "remotes::install_github('satijalab/seurat-wrappers', 'seurat5')"
+    # There is no seurat5 commit at the time of this install 2024/10/09
+    # Rscript -e "remotes::install_github('stuart-lab/signac', 'seurat5')"
+    Rscript -e 'BiocManager::install(c("BiocGenerics", "S4Vectors", "Rsamtools", "IRanges", "GenomicRanges", "GenomeInfoDb"))'
+    Rscript -e ' BiocManager::install(c("BSgenome.Hsapiens.UCSC.hg38", "EnsDb.Hsapiens.v86", "TFBSTools" )) '
+    Rscript -e ' BiocManager::install(c("BSgenome.Mmusculus.UCSC.mm10", "EnsDb.Mmusculus.v79" )) '
+    Rscript -e "remotes::install_github('stuart-lab/signac')"
+
+    Rscript -e "remotes::install_github('bnprks/BPCells/r')"
+    ## for the Seurat stats - speed up - finally
+    Rscript -e "remotes::install_github('immunogenomics/presto')"
+    ## needed for the tutorial how to use mixscape for SingleCell Cripser screen data
+    Rscript -e "install.packages('mixtools', repos='http://cran.r-project.org')"
+
+    # Clean up
+    apk del build-base
+    rm -rf /var/cache/apk/*
+
+%environment
+    # Set environment variables
+    export PATH=$PATH:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/usr/local/lib/R/bin
+    export R_LIBS_USER=/usr/local/lib/R/site-library
+    export PIP_BREAK_SYSTEM_PACKAGES=1
+
+%runscript
+    # This is the default command when the container is run
+     bash -c "jupyter lab --ip=0.0.0.0 --no-browser --allow-root"
+
+%test
+    # Test if JupyterLab is installed correctly
+    jupyter --version
+    R --version

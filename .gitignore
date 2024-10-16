@@ -1,0 +1,7 @@
+/data/
+/modules/
+/SeuratImage/
+*.sif
+*.ipynb
+*.ipynb_checkpoints/
+*.swp
