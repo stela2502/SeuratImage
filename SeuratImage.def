@@ -1,62 +1,104 @@
 Bootstrap: docker
-From: alpine:latest
+From: ubuntu:latest
 
 %post
-    # Update and install essential packages
-    apk update && apk add --no-cache \
-        bash \
-        build-base \
-        fontconfig ttf-dejavu ttf-droid ttf-liberation \
-        curl \
-        openblas-dev \
-        gfortran \
-        python3 \
-        py3-pip \
-        python3-dev \
-        py3-setuptools \
-        py3-wheel \
-        R \
-        R-dev \
-        R-doc \
-        libxml2-dev \
-        libcurl \
-        curl-dev \
-        linux-headers \
-        zeromq-dev \
-        gcc \
-        g++ \
-        gfortran \
-        libffi-dev \
-        openssl-dev \
-        make \
-        cmake \
-        zeromq-dev \
-        libgit2-dev \
-        cairo-dev \
-        fontconfig freetype-dev harfbuzz fribidi-dev \
-        harfbuzz-dev \
-        libjpeg-turbo-dev tiff-dev \
-        git
-    # all of them just to get deftools installed later:
-    apk add --no-cache \
-        zeromq-dev \
-        libgit2-dev \
-        cairo-dev \
-        fontconfig freetype-dev harfbuzz fribidi-dev \
-        harfbuzz-dev \
-        libjpeg-turbo-dev tiff-dev 
+    DEBIAN_FRONTEND=noninteractive
+    set +e  # Let commands fail without stopping the whole build
 
-    # and this is necessary for Seurat
-    apk add --no-cache \
-        libgomp gfortran lapack-dev blas-dev boost-dev \
-        openblas libxml2-dev sqlite-dev zlib-dev hdf5-dev gsl-dev
+    LOG_ERR="/var/tmp/install_errors.log"
+    LOG_CMD="/var/tmp/failed_cmds.log"
+    touch "$LOG_ERR" "$LOG_CMD"
 
-    # Allow pip to modify system-wide packages
-    export PIP_BREAK_SYSTEM_PACKAGES=1
+    run_logged() {
+        #echo "Running: $*"  # optional: shows what is happening live
+        eval "$@" 2>>"$LOG_ERR"
+        if [ $? -ne 0 ]; then
+            echo "$@" >> "$LOG_CMD"
+        fi
+    }
+
+
     
+    cmd="apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    bash \
+    build-essential \
+    curl \
+    libopenblas-dev \
+    gfortran \
+    python3 \
+    python3-pip \
+    python3-dev \
+    python3-setuptools \
+    python3-wheel \
+    r-base \
+    r-base-dev \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    curl \
+    linux-headers-$(uname -r) \
+    libzmq3-dev \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    make \
+    cmake \
+    libgit2-dev \
+    libcairo2-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libjpeg-dev \
+    libtiff-dev \
+    git"
+    run_logged "$cmd"
+
+    # All of them just to get devtools installed later (repeating for clarity)
+    cmd="apt-get install -y \
+    libzmq3-dev \
+    libgit2-dev \
+    libcairo2-dev \
+    libfontconfig1-dev \
+    libfreetype6-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libjpeg-dev \
+    libtiff-dev"
+    run_logged "$cmd"
+
+    # And this is necessary for Seurat
+    cmd="apt-get install -y \
+    libgomp1 \
+    gfortran \
+    liblapack-dev \
+    libblas-dev \
+    libboost-all-dev \
+    libopenblas-dev \
+    libxml2-dev \
+    libsqlite3-dev \
+    zlib1g-dev \
+    libhdf5-dev \
+    libgsl-dev"
+    run_logged "$cmd"
+
+    # for R to be able to plot to a file:
+    apt-get update && apt-get install -y \
+    libx11-dev \
+    libxt-dev \
+    libcairo2-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libxext-dev \
+    && apt-get clean
+
+
+    # Allow pip to modify system-wide packages (for Python >= 3.11)
+    export PIP_BREAK_SYSTEM_PACKAGES=1
+
     # Install JupyterLab and related Python packages
-    pip install --no-cache-dir --upgrade pip
-    pip install --no-cache-dir \
+    # pip install --no-cache-dir --break-system-packages --upgrade pip # debian does not allow that!
+    cmd="pip install --no-cache-dir --break-system-packages \
         jupyterlab \
         nbconvert \
         papermill \
@@ -65,35 +107,61 @@ From: alpine:latest
         pandas \
         matplotlib \
         seaborn \
-        notebook
+        notebook"
+    run_logged "$cmd"
+
 
     # Install R packages
-    Rscript -e "install.packages('IRkernel', repos='http://cran.r-project.org')"
-    Rscript -e "IRkernel::installspec(user = FALSE)"  # Register the kernel in Jupyter
+    cmd="Rscript -e \"install.packages('IRkernel', repos='http://cran.r-project.org')\""
+    run_logged "$cmd"
+    cmd="Rscript -e \"IRkernel::installspec(user = FALSE)\""  # Register the kernel in Jupyter
+    run_logged "$cmd"
 
     # Install additional R packages for data science
-    Rscript -e "install.packages(c('devtools', 'remotes', 'segmented', 'BiocManager' ), repos='http://cran.r-project.org')"
-    Rscript -e "install.packages(c('Seurat'), repos='http://cran.r-project.org')"
-    # Rscript -e "remotes::install_github('satijalab/seurat', 'seurat5')"
-    Rscript -e "remotes::install_github('satijalab/seurat-data', 'seurat5')"
-    Rscript -e "remotes::install_github('satijalab/azimuth', 'seurat5')"
-    Rscript -e "remotes::install_github('satijalab/seurat-wrappers', 'seurat5')"
-    # There is no seurat5 commit at the time of this install 2024/10/09
-    # Rscript -e "remotes::install_github('stuart-lab/signac', 'seurat5')"
-    Rscript -e 'BiocManager::install(c("BiocGenerics", "S4Vectors", "Rsamtools", "IRanges", "GenomicRanges", "GenomeInfoDb"))'
-    Rscript -e ' BiocManager::install(c("BSgenome.Hsapiens.UCSC.hg38", "EnsDb.Hsapiens.v86", "TFBSTools" )) '
-    Rscript -e ' BiocManager::install(c("BSgenome.Mmusculus.UCSC.mm10", "EnsDb.Mmusculus.v79" )) '
-    Rscript -e "remotes::install_github('stuart-lab/signac')"
+    cmd="Rscript -e \"install.packages(c('devtools', 'remotes', 'segmented', 'BiocManager', 'svglite' ), repos='http://cran.r-project.org')\""
+    run_logged "$cmd"
 
-    Rscript -e "remotes::install_github('bnprks/BPCells/r')"
+    cmd="Rscript -e \"install_github('stela2502/deconv_matching_bulk_scnRNA/SQUID')\""
+    run_logged "$cmd"
+
+    cmd="Rscript -e \"install.packages(c('Seurat', 'dplyr', 'ggplot2', 'pheatmap', 'RColorBrewer', 'PoiClaClu', 'glmpca', 'ggbeeswarm', 'ggdendro' ))\""
+    run_logged "$cmd"
+    cmd="Rscript -e \"BiocManager::install(c("DESeq2", "vsn", "apeglm", "genefilter","TOAST"))\""
+    run_logged "$cmd"
+    cmd="Rscript -e \"devtools::install_github('xuranw/MuSiC')\""
+    run_logged "$cmd"
+
+    # Rscript -e "remotes::install_github('satijalab/seurat', 'seurat5')\""
+    cmd="Rscript -e \"remotes::install_github('satijalab/seurat-data', 'seurat5')\""
+    run_logged "$cmd"
+    #Rscript -e "remotes::install_github('satijalab/azimuth', 'seurat5')\""
+
+    #cmd="Rscript -e \"remotes::install_github('satijalab/seurat-wrappers', 'seurat5')\""
+    #run_logged "$cmd"
+
+    # There is no seurat5 commit at the time of this install 2024/10/09
+    #cmd="Rscript -e "remotes::install_github('stuart-lab/signac', 'seurat5')\""
+    #run_logged "$cmd"
+    cmd="Rscript -e \"BiocManager::install(c('BiocGenerics', 'S4Vectors', 'Rsamtools', 'IRanges', 'GenomicRanges', 'GenomeInfoDb', 'tximport', 'slingshot', 'monocle3' )) \""
+    run_logged "$cmd"
+    cmd="Rscript -e \"BiocManager::install(c('BSgenome.Hsapiens.UCSC.hg38', 'EnsDb.Hsapiens.v86', 'TFBSTools' )) \""
+    run_logged "$cmd"
+    cmd="Rscript -e \"BiocManager::install(c('BSgenome.Mmusculus.UCSC.mm10', 'EnsDb.Mmusculus.v79' )) \""
+    run_logged "$cmd"
+    #Rscript -e "remotes::install_github('stuart-lab/signac')\""
+
+    Rscript -e "remotes::install_github('stela2502/SoloGEx')\""
+
+    cmd="Rscript -e \"remotes::install_github('bnprks/BPCells/r')\""
+    run_logged "$cmd"
     ## for the Seurat stats - speed up - finally
-    Rscript -e "remotes::install_github('immunogenomics/presto')"
+    cmd="Rscript -e \"remotes::install_github('immunogenomics/presto')\""
+    run_logged "$cmd"
     ## needed for the tutorial how to use mixscape for SingleCell Cripser screen data
-    Rscript -e "install.packages('mixtools', repos='http://cran.r-project.org')"
+    cmd="Rscript -e \"install.packages('mixtools')\""
+    run_logged "$cmd"
 
     # Clean up
-    apk del build-base
-    rm -rf /var/cache/apk/*
 
 %environment
     # Set environment variables
@@ -103,9 +171,10 @@ From: alpine:latest
 
 %runscript
     # This is the default command when the container is run
-     bash -c "jupyter lab --ip=0.0.0.0 --no-browser --allow-root"
+    exec jupyter lab --ip=0.0.0.0 --no-browser --allow-root
 
 %test
     # Test if JupyterLab is installed correctly
     jupyter --version
     R --version
+

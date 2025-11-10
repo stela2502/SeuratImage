@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Variables
-SANDBOX_DIR="Seurat"
+SANDBOX_DIR="SeuratImage"
 SCRIPT=$(readlink -f $0)
 SANDBOX_PATH=`dirname $SCRIPT`
 
@@ -13,5 +13,5 @@ fi
 
 # Open a shell in the sandbox
 echo "Entering sandbox ${SANDBOX_DIR}..."
-sudo apptainer shell -B /mnt --writable "${SANDBOX_PATH}/${SANDBOX_DIR}"
+sudo apptainer shell -B /mnt,/home --writable "${SANDBOX_PATH}/${SANDBOX_DIR}"
 

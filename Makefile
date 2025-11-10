@@ -1,5 +1,5 @@
 # Variables
-VERSION := 1.0
+VERSION := 1.1
 IMAGE_NAME := SeuratImage_v$(VERSION).sif
 SANDBOX_DIR := SeuratImage
 DEFINITION_FILE := SeuratImage.def

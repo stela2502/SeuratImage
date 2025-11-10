@@ -5,3 +5,14 @@
 *.ipynb
 *.ipynb_checkpoints/
 *.swp
+DESeq2.html
+RESULTS.csv
+RESULTS.rds
+RplotTest.png
+Seurat.alpine.defunc.def
+SeuratImage_defunc.def
+bioconductor.org/
+myplot.svg
+szip-2.1.1.tar.gz
+szip-2.1.1/
+thes.png
