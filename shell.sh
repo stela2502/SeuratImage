@@ -13,5 +13,5 @@ fi
 
 # Open a shell in the sandbox
 echo "Entering sandbox ${SANDBOX_DIR}..."
-sudo apptainer shell -B /mnt,/home --writable "${SANDBOX_PATH}/${SANDBOX_DIR}"
+sudo apptainer shell -B /data1,/data2,/mnt,/home --writable "${SANDBOX_PATH}/${SANDBOX_DIR}"
 

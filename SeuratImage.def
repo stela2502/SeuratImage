@@ -124,32 +124,26 @@ From: ubuntu:latest
     cmd="Rscript -e \"install_github('stela2502/deconv_matching_bulk_scnRNA/SQUID')\""
     run_logged "$cmd"
 
-    cmd="Rscript -e \"install.packages(c('Seurat', 'dplyr', 'ggplot2', 'pheatmap', 'RColorBrewer', 'PoiClaClu', 'glmpca', 'ggbeeswarm', 'ggdendro' ))\""
+    cmd="Rscript -e \"install.packages(c('Seurat', 'Signac', 'remotes', 'dplyr', 'ggplot2', 'pheatmap', 'RColorBrewer', 'PoiClaClu', 'glmpca', 'ggbeeswarm', 'ggdendro' ))\""
     run_logged "$cmd"
     cmd="Rscript -e \"BiocManager::install(c("DESeq2", "vsn", "apeglm", "genefilter","TOAST"))\""
     run_logged "$cmd"
     cmd="Rscript -e \"devtools::install_github('xuranw/MuSiC')\""
     run_logged "$cmd"
 
-    # Rscript -e "remotes::install_github('satijalab/seurat', 'seurat5')\""
-    cmd="Rscript -e \"remotes::install_github('satijalab/seurat-data', 'seurat5')\""
+    cmd="Rscript -e \"remotes::install_github('satijalab/seurat-data')\""
     run_logged "$cmd"
-    #Rscript -e "remotes::install_github('satijalab/azimuth', 'seurat5')\""
 
-    #cmd="Rscript -e \"remotes::install_github('satijalab/seurat-wrappers', 'seurat5')\""
-    #run_logged "$cmd"
-
+    
+    cmd="RScript -e \"devtools::install_github('ge11232002/TFMPvalue')\""
+    run_logged "$cmd"	
     # There is no seurat5 commit at the time of this install 2024/10/09
-    #cmd="Rscript -e "remotes::install_github('stuart-lab/signac', 'seurat5')\""
-    #run_logged "$cmd"
-    cmd="Rscript -e \"BiocManager::install(c('BiocGenerics', 'S4Vectors', 'Rsamtools', 'IRanges', 'GenomicRanges', 'GenomeInfoDb', 'tximport', 'slingshot', 'monocle3' )) \""
+    cmd="Rscript -e \"BiocManager::install(c('BiocGenerics', 'S4Vectors', 'Rsamtools', 'IRanges', 'GenomicRanges', 'GenomeInfoDb', 'tximport', 'slingshot', 'monocle3', 'chromVAR' )) \""
     run_logged "$cmd"
     cmd="Rscript -e \"BiocManager::install(c('BSgenome.Hsapiens.UCSC.hg38', 'EnsDb.Hsapiens.v86', 'TFBSTools' )) \""
     run_logged "$cmd"
     cmd="Rscript -e \"BiocManager::install(c('BSgenome.Mmusculus.UCSC.mm10', 'EnsDb.Mmusculus.v79' )) \""
     run_logged "$cmd"
-    #Rscript -e "remotes::install_github('stuart-lab/signac')\""
-
     Rscript -e "remotes::install_github('stela2502/SoloGEx')\""
 
     cmd="Rscript -e \"remotes::install_github('bnprks/BPCells/r')\""

@@ -70,7 +70,7 @@ execute{cmd="singularity exec "..bind_paths.." ".. base.. "/${IMAGE_NAME}_v".. v
 whatis("Name         : ${IMAGE_NAME} singularity image")
 whatis("Version      : ${IMAGE_NAME} $VERSION")
 whatis("Category     : Image")
-whatis("Description  : Singularity image providing Python and R and a jupyter lab as default entry point ")
+whatis("Description  : Singularity image providing Python and R Seurat 5.4.0 Signac 1.16.0 and chromVar 1.24.0")
 whatis("Installed on : $(date +'%d/%m/%Y') ")
 whatis("Modified on  : --- ")
 whatis("Installed by : \`whomai\`")

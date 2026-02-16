@@ -1,4 +1,6 @@
 /data/
+/SeuratImageOld/
+build-temp*/
 /modules/
 /SeuratImage/
 *.sif

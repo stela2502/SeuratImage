@@ -14,5 +14,5 @@ fi
 
 # Run the image
 echo "Running ${IMAGE_NAME}..."
-apptainer exec -B /mnt,/home "${IMAGE_PATH}/${IMAGE_NAME}" jupyter lab --ip=0.0.0.0 --no-browser --allow-root
+apptainer exec "${IMAGE_PATH}/SeuratImage" jupyter lab --ip=0.0.0.0 --no-browser --allow-root
 
